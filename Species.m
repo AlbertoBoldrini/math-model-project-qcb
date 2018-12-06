@@ -25,6 +25,11 @@ classdef Species < handle
         right  = 1;
         factor = 1;
         
+        Dx = 1;
+        Dy = 1;
+        Vx = 1;
+        Vy = 1;
+        
         density = 0;
         
         grow = @(ecosystem, species) (0 * species.density)
@@ -130,6 +135,12 @@ classdef Species < handle
             
             %% Compute the tendency to still in the same position
             s = this.factor - u - d - l - r;
+            
+            % Check that the values are less than a treshold 
+            % to ensure numerical stability
+            %if min(s) < 0
+            %    error("Numerical instability! Reduce the time-step, or increase the size of the cells!");
+            %end
 
             %% Linearize the matrices
             u = reshape(u, nx*ny, 1);
