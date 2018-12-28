@@ -27,8 +27,8 @@ classdef Species < handle
         
         Dx = 1;
         Dy = 1;
-        Vx = 1;
-        Vy = 1;
+        Vx = 0;
+        Vy = 0;
         
         density = 0;
         
@@ -47,10 +47,10 @@ classdef Species < handle
             nX = ecosystem.nX;
             nY = ecosystem.nY;
             
-            this.up      = zeros(nY, nX);
-            this.down    = zeros(nY, nX);
-            this.left    = zeros(nY, nX);
-            this.right   = zeros(nY, nX);
+            this.Dx      = zeros(nY, nX);
+            this.Dy      = zeros(nY, nX);
+            this.Vx      = zeros(nY, nX);
+            this.Vy      = zeros(nY, nX);
             this.factor  = ones (nY, nX);
             this.density = zeros(nY, nX);
         end
@@ -67,16 +67,36 @@ classdef Species < handle
         
         end
         
-        function setDiffusionParameter(this, D)
+        function setVelocity(this, Vy, Vx)
+            
+            nX = this.ecosystem.nX;
+            nY = this.ecosystem.nY;
+            
+            this.Vx = ones(nY, nX) .* Vx;
+            this.Vy = ones(nY, nX) .* Vy;
+            
+        end
+        
+        function setDiffusion(this, Dy, Dx)
            
             nX = this.ecosystem.nX;
             nY = this.ecosystem.nY;
             
-            this.up     = ones(nY, nX) .* D;
-            this.down   = ones(nY, nX) .* D;
-            this.left   = ones(nY, nX) .* D;
-            this.right  = ones(nY, nX) .* D;
-            this.factor = ones(nY, nX);
+            this.Dx = ones(nY, nX) .* Dx;
+            this.Dy = ones(nY, nX) .* Dy;
+            
+        end
+        
+        function generateCoefficients(this)
+        
+            dt = this.ecosystem.dt;
+            dx = this.ecosystem.dx;
+            dy = this.ecosystem.dy;
+            
+            this.up    = (0.5 * this.Dy / dy - 0.25 * this.Vy) * dt / dy;
+            this.down  = (0.5 * this.Dy / dy + 0.25 * this.Vy) * dt / dy;
+            this.left  = (0.5 * this.Dx / dx - 0.25 * this.Vx) * dt / dx;
+            this.right = (0.5 * this.Dx / dx + 0.25 * this.Vx) * dt / dx;
             
         end
         
@@ -115,22 +135,16 @@ classdef Species < handle
         
         % The result is the two matrices for the system:
         % A u_{t+1) = B u_t
-        function prepareSystemMatrices(this)
+        function generateSystemMatrices(this)
             
             nx = this.ecosystem.nX;
             ny = this.ecosystem.nY;
             
-            dt = this.ecosystem.dt;
-            dx = this.ecosystem.dx;
-            dy = this.ecosystem.dy;
-            
-            a = dt / (dx * dx);
-            b = dt / (dy * dy);
-            
-            u = this.factor .* b .* this.up;
-            d = this.factor .* b .* this.down;
-            l = this.factor .* a .* this.left;
-            r = this.factor .* a .* this.right;
+
+            u = this.factor .* this.up;
+            d = this.factor .* this.down;
+            l = this.factor .* this.left;
+            r = this.factor .* this.right;
             
             
             %% Compute the tendency to still in the same position

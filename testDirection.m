@@ -1,6 +1,6 @@
 
 % Create a new ecosystem with a grid 1 x nX
-eco = Ecosystem(1,500);
+eco = Ecosystem(1,1000);
 
 % Set the left-top and the right-bottom coordinate of the rectangle
 % of the simulation.
@@ -13,17 +13,18 @@ eco.setTime(0, 0.01);
 s1 = eco.createSpecies();
 
 % Set the diffusion parameter and the boundaries for this species
-s1.setDiffusionParameter(0.001);
-s1.setNoFluxBoundaries();
+s1.setDiffusion(0.10, 0.100);
+s1.setVelocity(0.3, 0.3);
 
-s1.right = s1.right + 0.04 * 1.1 * eco.dx;
-s1.left  = s1.left  - 0.04 * 1.1 * eco.dx;
 
 % The initial condition
-s1.density = 2.5 * exp(-(eco.X-0.5).^2/(0.1)^2);
+s1.density = 3.8 * exp(-(eco.X-1).^2 / (0.1)^2);
+
+s1.generateCoefficients();
+s1.setNoFluxBoundaries();
 
 % Prepare the matrices for the simulation
-eco.prepareSystemMatrices();
+eco.generateSystemMatrices();
 
 % Plot the initial condition
 plot(eco.X, s1.density);
@@ -35,7 +36,7 @@ video.FrameRate = 30;
 open(video)
 writeVideo(video, getframe(gcf));
 
-for i = 1:1000
+for i = 1:10000
     
     % Evolve the system of 1 time-step
     eco.evolve();
@@ -44,11 +45,11 @@ for i = 1:1000
     plot(eco.X, s1.density);
     ylim([0 2]);
     
-    title(sprintf('t=%f max=%f',eco.t,max(s1.density)))
+    title(sprintf('t=%f sum=%f max=%f',eco.t,sum(s1.density), max(s1.density)))
     
-    if max(s1.density) < 1
-        break
-    end
+    %if max(s1.density) < 1
+    %    break
+    %end
     
     % Insert a frame
     writeVideo(video, getframe(gcf));

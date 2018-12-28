@@ -7,11 +7,11 @@ classdef Ecosystem < handle
         x2 = 1, y2 = 1;
         
         % Number of points in space and the space-step
-        nX, nY;
-        dx, dy;
+        nX = 0, nY = 0;
+        dx = 0, dy = 0;
         
         % Current time and the time-step
-        t , dt;
+        t = 0, dt = 0;
         
         % The mesh matrices
         X , Y;
@@ -43,6 +43,15 @@ classdef Ecosystem < handle
             out = this.species{this.nS};
             
         end
+        
+        function requireTimeSpace(this)
+            
+            if this.dx == 0 || this.dy == 0 || this.dt == 0
+                error("The time and space domain of the ecosystem must be specified before!");
+            end
+            
+        end 
+        
         
         function setTime(this, t, dt)
             
@@ -76,15 +85,21 @@ classdef Ecosystem < handle
         
         end
         
-        function prepareSystemMatrices(this)
+        function generateSystemMatrices(this)
+            
+            % Check the time and space domain
+            this.requireTimeSpace();
            
             for i = 1:this.nS
-                this.species{i}.prepareSystemMatrices();
+                this.species{i}.generateSystemMatrices();
             end
             
         end
 
         function evolve(this)
+            
+            % Check the time and space domain
+            this.requireTimeSpace();
             
             grow = cell(this.nS, 1);
             
