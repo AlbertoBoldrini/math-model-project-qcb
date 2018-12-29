@@ -26,7 +26,7 @@ s2.setDiffusion(D);
 
 % After the setting of the diffusion coefficent
 % The fluxes must be initialized and then patched with
-% other methods as addNoFluxBoundaries
+% other methods like addNoFluxBoundaries
 s1.initializeFluxes();
 s2.initializeFluxes();
 
