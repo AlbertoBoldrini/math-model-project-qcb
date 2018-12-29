@@ -7,7 +7,7 @@ eco = Ecosystem(1,1000);
 eco.setSpace(0,0,+3,+3);
 
 % Set the initial time and the time-step
-eco.setTime(0, 0.01);
+eco.setTime(0, 0.05);
 
 % Create two species in the ecosystem
 s1 = eco.createSpecies("boh", [0, 0, 0]);
@@ -36,7 +36,7 @@ video.FrameRate = 30;
 open(video)
 writeVideo(video, getframe(gcf));
 
-for i = 1:100
+for i = 1:20
     
     % Evolve the system of 1 time-step
     eco.crankStep();
