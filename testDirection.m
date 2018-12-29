@@ -10,21 +10,21 @@ eco.setSpace(0,0,+3,+3);
 eco.setTime(0, 0.01);
 
 % Create two species in the ecosystem
-s1 = eco.createSpecies();
+s1 = eco.createSpecies([0, 0, 0]);
 
 % Set the diffusion parameter and the boundaries for this species
-s1.setDiffusion(0.10, 0.100);
-s1.setVelocity(0.3, 0.3);
+s1.setDiffusion(0.0);
+s1.setVelocity(1, 1);
 
 
 % The initial condition
-s1.density = 3.8 * exp(-(eco.X-1).^2 / (0.1)^2);
+s1.density = 1 * exp(-(eco.X-1).^2 / (0.1)^2);
 
-s1.generateCoefficients();
-s1.setNoFluxBoundaries();
+s1.initializeFluxes();
+s1.addNoFluxBoundaries();
 
 % Prepare the matrices for the simulation
-eco.generateSystemMatrices();
+eco.startSimulation();
 
 % Plot the initial condition
 plot(eco.X, s1.density);
@@ -36,10 +36,10 @@ video.FrameRate = 30;
 open(video)
 writeVideo(video, getframe(gcf));
 
-for i = 1:10000
+for i = 1:100
     
     % Evolve the system of 1 time-step
-    eco.evolve();
+    eco.crankStep();
     
     % Plot the density at this time step
     plot(eco.X, s1.density);

@@ -31,28 +31,6 @@ classdef Ecosystem < handle
             
         end
         
-        function out = createSpecies(this)
-            
-            % Increment the number of species
-            this.nS = this.nS + 1;
-            
-            % Add a new species in the list
-            this.species{this.nS} = Species(this, this.nS);
-            
-            % Return the created species
-            out = this.species{this.nS};
-            
-        end
-        
-        function requireTimeSpace(this)
-            
-            if this.dx == 0 || this.dy == 0 || this.dt == 0
-                error("The time and space domain of the ecosystem must be specified before!");
-            end
-            
-        end 
-        
-        
         function setTime(this, t, dt)
             
             % Set the time and the time-step
@@ -79,27 +57,32 @@ classdef Ecosystem < handle
             
         end
         
-        function setGrowFunction(this, growfunc)
+        function out = createSpecies(this, name, color)
             
-            this.growfunc = growfunc;
-        
+            if this.dx == 0 || this.dy == 0 || this.dt == 0
+                error("The time and space domain of the ecosystem must be specified before!");
+            end
+            
+            % Increment the number of species
+            this.nS = this.nS + 1;
+            
+            % Add a new species in the list
+            this.species{this.nS} = Species(this, this.nS, name, color);
+            
+            % Return the created species
+            out = this.species{this.nS};
+            
         end
         
-        function generateSystemMatrices(this)
+        function startSimulation(this)
             
-            % Check the time and space domain
-            this.requireTimeSpace();
-           
             for i = 1:this.nS
-                this.species{i}.generateSystemMatrices();
+                this.species{i}.startSimulation();
             end
             
         end
-
-        function evolve(this)
-            
-            % Check the time and space domain
-            this.requireTimeSpace();
+        
+        function eulerStep(this)
             
             grow = cell(this.nS, 1);
             
@@ -111,31 +94,76 @@ classdef Ecosystem < handle
             % Evolve each species
             for i = 1:this.nS
                 
+                % Fetch the current species
+                s = this.species{i};
+                
                 % Reshape the density and the grow rate
-                u = reshape(this.species{i}.density, this.nY * this.nX, 1);
-                g = reshape(        grow{i}, this.nY * this.nX, 1);
+                u = reshape(s.density, this.nY * this.nX, 1);
+                g = reshape(  grow{i}, this.nY * this.nX, 1);
                 
                 % Compute the density at the next step
-                this.species{i}.density = reshape(this.species{i}.A \ (this.species{i}.B * u + g * this.dt), this.nY, this.nX);
+                u = s.B * (s.B * u + g * this.dt);
                 
-                % Increment the time of the simulation
-                this.t = this.t + this.dt;
+                % Reshape the result into a matrix form
+                s.density = reshape(u, this.nY, this.nX);
             end
+            
+            % Increment the time of the simulation
+            this.t = this.t + this.dt;
+        end
+        
+        function crankStep(this)
+            
+            grow = cell(this.nS, 1);
+            
+            % Compute the grow rate for each species
+            for i = 1:this.nS
+                grow{i} = this.species{i}.grow(this, this.species{i});
+            end
+            
+            % Evolve each species
+            for i = 1:this.nS
+                
+                % Fetch the current species
+                s = this.species{i};
+                
+                % Reshape the density and the grow rate
+                u = reshape(s.density, this.nY * this.nX, 1);
+                g = reshape(  grow{i}, this.nY * this.nX, 1);
+                
+                % Compute the density at the next step
+                s.density = reshape(s.A \ (s.B * (u + g * this.dt)), this.nY, this.nX);
+               
+            end
+            
+            % Increment the time of the simulation
+            this.t = this.t + this.dt;
+        end
+        
+        function initializeImage(this) 
+            
+            hold off
+            
+            for i = 1:this.nS
+                this.species{i}.initializeImage();
+                hold on
+            end
+            
+            hold off
+            
+            this.updateImage();
+        end
+        
+        function updateImage(this)
+            
+            for i = 1:this.nS
+                this.species{i}.updateImage();
+            end
+            
         end
         
         
-        
-%         function plot(this)
-%             
-%             for i = 1:this.nS
-%                
-%                 plot(this.Y, this.species{i}.density);
-%                 
-%                 hold on
-%                 
-%             end
-%             
-%         end
+
     end
 end
 

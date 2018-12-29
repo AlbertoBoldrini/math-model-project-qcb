@@ -19,30 +19,35 @@ classdef Species < handle
         % describes the tendency of the particles in position (y,x)
         % to move in that direction.
         % The direction must be interpreted in the drawing above.
-        up     = 1;
-        down   = 1;
-        left   = 1;
-        right  = 1;
-        factor = 1;
+        up     = 0;
+        down   = 0;
+        left   = 0;
+        right  = 0;
+        
+        name   = "Unnamed";
+        color  = [0, 0, 0];
+        image  = 0;
         
         Dx = 1;
         Dy = 1;
         Vx = 0;
         Vy = 0;
         
+        A = 1;
+        B = 0;
+        
         density = 0;
         
         grow = @(ecosystem, species) (0 * species.density)
-        
-        A = 1;
-        B = 0;
     end
     
     methods
-        function this = Species(ecosystem, index)
+        function this = Species(ecosystem, index, name, color)
             
             this.ecosystem = ecosystem;
             this.index     = index;
+            this.name      = name;
+            this.color     = color;
             
             nX = ecosystem.nX;
             nY = ecosystem.nY;
@@ -51,7 +56,6 @@ classdef Species < handle
             this.Dy      = zeros(nY, nX);
             this.Vx      = zeros(nY, nX);
             this.Vy      = zeros(nY, nX);
-            this.factor  = ones (nY, nX);
             this.density = zeros(nY, nX);
         end
         
@@ -61,13 +65,7 @@ classdef Species < handle
             
         end
         
-        function setGrowFunction(this, grow)
-            
-            this.grow = grow;
-        
-        end
-        
-        function setVelocity(this, Vy, Vx)
+        function setVelocity(this, Vx, Vy)
             
             nX = this.ecosystem.nX;
             nY = this.ecosystem.nY;
@@ -77,132 +75,124 @@ classdef Species < handle
             
         end
         
-        function setDiffusion(this, Dy, Dx)
+        function setDiffusion(this, D)
            
             nX = this.ecosystem.nX;
             nY = this.ecosystem.nY;
             
-            this.Dx = ones(nY, nX) .* Dx;
-            this.Dy = ones(nY, nX) .* Dy;
+            this.Dx = ones(nY, nX) .* D;
+            this.Dy = ones(nY, nX) .* D;
             
         end
         
-        function generateCoefficients(this)
+        function initializeFluxes(this)
         
             dt = this.ecosystem.dt;
             dx = this.ecosystem.dx;
             dy = this.ecosystem.dy;
             
-            this.up    = (0.5 * this.Dy / dy - 0.25 * this.Vy) * dt / dy;
-            this.down  = (0.5 * this.Dy / dy + 0.25 * this.Vy) * dt / dy;
-            this.left  = (0.5 * this.Dx / dx - 0.25 * this.Vx) * dt / dx;
-            this.right = (0.5 * this.Dx / dx + 0.25 * this.Vx) * dt / dx;
+            this.up    = (this.Dy / dy - 0.5 * this.Vy) * dt / dy;
+            this.down  = (this.Dy / dy + 0.5 * this.Vy) * dt / dy;
+            this.left  = (this.Dx / dx - 0.5 * this.Vx) * dt / dx;
+            this.right = (this.Dx / dx + 0.5 * this.Vx) * dt / dx;
             
         end
         
-        function setNoFluxObstacles(this, obstacles)
+        function addNoFluxObstacle(this, obstacle)
             
-            pass = 1 - obstacles;
+            pass = 1 - obstacle;
            
             this.up    = this.up    .* pass(1:this.nY  , 2:this.nX+1);
             this.down  = this.down  .* pass(3:this.nY+2, 2:this.nX+1);
             this.left  = this.left  .* pass(2:this.nY+1, 1:this.nX  );
             this.right = this.right .* pass(2:this.nY+1, 3:this.nX+2);
             
-            this.factor = this.factor .* ceil(pass(2:this.nY+1, 2:this.nX+1));
         end
         
-        function setNoFluxBoundariesX(this)
+        function addNoFluxBoundariesX(this)
             
             this.left (:,                 1) = 0;
             this.right(:, this.ecosystem.nX) = 0;
             
         end
         
-        function setNoFluxBoundariesY(this)
+        function addNoFluxBoundariesY(this)
             
             this.up  (                1, :) = 0;
             this.down(this.ecosystem.nY, :) = 0;
             
         end
         
-        function setNoFluxBoundaries(this)
+        function addNoFluxBoundaries(this)
             
-            this.setNoFluxBoundariesX();
-            this.setNoFluxBoundariesY();
+            this.addNoFluxBoundariesX();
+            this.addNoFluxBoundariesY();
             
         end
         
-        % The result is the two matrices for the system:
-        % A u_{t+1) = B u_t
-        function generateSystemMatrices(this)
+        function startSimulation(this)
             
-            nx = this.ecosystem.nX;
-            ny = this.ecosystem.nY;
+            nX = this.ecosystem.nX;
+            nY = this.ecosystem.nY;
             
-
-            u = this.factor .* this.up;
-            d = this.factor .* this.down;
-            l = this.factor .* this.left;
-            r = this.factor .* this.right;
-            
-            
-            %% Compute the tendency to still in the same position
-            s = this.factor - u - d - l - r;
-            
-            % Check that the values are less than a treshold 
-            % to ensure numerical stability
-            %if min(s) < 0
-            %    error("Numerical instability! Reduce the time-step, or increase the size of the cells!");
-            %end
+            dt = this.ecosystem.dt;
+            dx = this.ecosystem.dx;
+            dy = this.ecosystem.dy;
 
             %% Linearize the matrices
-            u = reshape(u, nx*ny, 1);
-            d = reshape(d, nx*ny, 1);
-            l = reshape(l, nx*ny, 1);
-            r = reshape(r, nx*ny, 1);
-            s = reshape(s, nx*ny, 1);
+            u = reshape((0.5 * dt / dy) * this.up   , nX*nY, 1);
+            d = reshape((0.5 * dt / dy) * this.down , nX*nY, 1);
+            l = reshape((0.5 * dt / dx) * this.left , nX*nY, 1);
+            r = reshape((0.5 * dt / dx) * this.right, nX*nY, 1);
+            c = u + d + l + r;
 
             %% Detach the link between different columns in the matrix
-            for x = 1:(nx-1)       
-                d(x*ny + 0) = 0;
-                u(x*ny + 1) = 0;
+            for x = 1:(nX-1)       
+                d(x*nY + 0) = 0;
+                u(x*nY + 1) = 0;
             end
 
             %% Construction of the A and B matrices
-            if nx > 1 && ny > 1
+            if nX > 1 && nY > 1
 
-                this.A = spdiags([-r -d 2-s -u -l], [-ny -1 0 +1 +ny], nx*ny, nx*ny);
-                this.B = spdiags([ r  d   s  u  l], [-ny -1 0 +1 +ny], nx*ny, nx*ny);
+                this.A = spdiags([-r -d 1+c -u -l], [-nY -1 0 +1 +nY], nX*nY, nX*nY);
+                this.B = spdiags([ r  d 1-c  u  l], [-nY -1 0 +1 +nY], nX*nY, nX*nY);
 
-            elseif nx > 1
+            elseif nX > 1
 
-                this.A = spdiags([-r 2-s -l], [-1 0 +1], nx, nx);
-                this.B = spdiags([ r   s  l], [-1 0 +1], nx, nx);
+                this.A = spdiags([-r 1+c -l], [-1 0 +1], nX, nX);
+                this.B = spdiags([ r 1-c  l], [-1 0 +1], nX, nX);
 
-            elseif ny > 1
+            elseif nY > 1
 
-                this.A = spdiags([-d 2-s -u], [-1 0 +1], ny, ny);
-                this.B = spdiags([ d   s  u], [-1 0 +1], ny, ny);
+                this.A = spdiags([-d 1+c -u], [-1 0 +1], nY, nY);
+                this.B = spdiags([ d 1-c  u], [-1 0 +1], nY, nY);
 
             else
 
-                this.A = spdiags(2-s, 0, 1, 1);
-                this.B = spdiags(  s, 0, 1, 1);
+                this.A = spdiags(1+c, 0, 1, 1);
+                this.B = spdiags(1-c, 0, 1, 1);
             end
-           
-        end
-        
-        function C = computeConservationMatrix(this)
-            
-            % Time-evolution matrix
-            U = full(this.A^-1) * this.B;
-            
-            % Sum the rows in the time-evolution matrix
-            C = reshape(sum(U), this.ecosystem.nY, this.ecosystem.nX);
-            
         end
 
+        
+        function initializeImage(this)
+            
+            imageData = cat(3, this.color(1) * ones(size(this.density)), ... 
+                               this.color(2) * ones(size(this.density)), ...
+                               this.color(3) * ones(size(this.density)));
+            
+            %this.image = imshow(imageData, 'InitialMagnification','fit');
+            this.image = imshow(imageData);
+            
+            set(this.image, 'AlphaData', zeros(size(this.density)))
+        end
+        
+        function updateImage(this)
+            
+            set(this.image, 'AlphaData', this.density)
+        
+        end
     end
 end
 
