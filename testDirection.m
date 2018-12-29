@@ -10,7 +10,7 @@ eco.setSpace(0,0,+3,+3);
 eco.setTime(0, 0.01);
 
 % Create two species in the ecosystem
-s1 = eco.createSpecies([0, 0, 0]);
+s1 = eco.createSpecies("boh", [0, 0, 0]);
 
 % Set the diffusion parameter and the boundaries for this species
 s1.setDiffusion(0.0);

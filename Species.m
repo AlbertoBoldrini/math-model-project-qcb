@@ -91,10 +91,10 @@ classdef Species < handle
             dx = this.ecosystem.dx;
             dy = this.ecosystem.dy;
             
-            this.up    = (this.Dy / dy - 0.5 * this.Vy) * dt / dy;
-            this.down  = (this.Dy / dy + 0.5 * this.Vy) * dt / dy;
-            this.left  = (this.Dx / dx - 0.5 * this.Vx) * dt / dx;
-            this.right = (this.Dx / dx + 0.5 * this.Vx) * dt / dx;
+            this.up    = this.Dy / dy - 0.5 * this.Vy;
+            this.down  = this.Dy / dy + 0.5 * this.Vy;
+            this.left  = this.Dx / dx - 0.5 * this.Vx;
+            this.right = this.Dx / dx + 0.5 * this.Vx;
             
         end
         
