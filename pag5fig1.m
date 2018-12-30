@@ -10,14 +10,14 @@ r = m/k;
 
 
 % Create a new ecosystem with a grid 1 x nX
-eco = Ecosystem(1,10000);
+eco = Ecosystem(1,3000);
 
 % Set the left-top and the right-bottom coordinate of the rectangle
 % of the simulation.
 eco.setSpace(0, 0, 5000, 1);
 
 % Set the initial time and the time-step
-eco.setTime(0, 0.01);
+eco.setTime(0, 0.05);
 
 % Create two species in the ecosystem with name and color
 s1 = eco.createSpecies("Prey",     [1,0,0]);
@@ -47,7 +47,7 @@ s2.grow = @(eco, sp) (k * s1.density ./ (H + s1.density) .* s2.density - m * s2.
 %s1.density = 1.0 * exp(-(eco.X-2500).^2/(200)^2);
 %s2.density = 1.0 * exp(-(eco.X-2500).^2/(200)^2) + eco.X*epsilon + delta;
 s1.density = 1.0 * exp(-(eco.X-2500).^2/(200)^2);
-s2.density = 1.0 * exp(-(eco.X-2500).^2/(200)^2) + eco.X * epsilon + delta;
+s2.density = 1.0 * exp(-(eco.X-2500).^2/(200)^2) + max(eco.X * epsilon + delta,0);
 
 % Prepare the matrices for the simulation
 eco.startSimulation();
@@ -56,7 +56,7 @@ eco.startSimulation();
 plot(eco.X, s1.density);
 hold on 
 plot(eco.X, s2.density);
-ylim([0 10]);
+ylim([0 1.2]);
 
 legend('Prey', 'Predator')
 hold off
@@ -69,7 +69,7 @@ video.FrameRate = 30;
 open(video)
 writeVideo(video, getframe(gcf));
 
-for i = 1:20000
+for i = 1:1000
     
     % Evolve the system of 1 time-step
     eco.crankStep();
@@ -79,7 +79,7 @@ for i = 1:20000
     hold on 
     
     plot(eco.X, s2.density);
-    ylim([0 10]);
+    ylim([0 1.2]);
     
     %legend('Prey', 'Predator')
     hold off
