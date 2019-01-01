@@ -61,7 +61,7 @@ classdef Species < handle
         
         function setDensity(this, density)
            
-            this.density = density;
+            this.density = density .* ones(this.ecosystem.nY, this.ecosystem.nX);
             
         end
         

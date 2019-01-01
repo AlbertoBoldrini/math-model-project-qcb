@@ -4,9 +4,11 @@ D = 1;
 H = 0.3;
 r = 0.4;
 k = 2.0;
-epsilon = 1e-5;
-delta = 1e-2;
+epsilon = 1.5e-5;
+epsilon1 = 0.07;
+delta = -3.6e-2;
 m = r * k;
+L = 4800;
 
 %Equilibrium values
 uEq = (r * H)/(1 - r);
@@ -50,8 +52,8 @@ s2.grow = @(eco, sp) (k * s1.density ./ (H + s1.density) .* s2.density - m * s2.
 % The initial condition
 %s1.density = 1.0 * exp(-(eco.X-2500).^2/(200)^2);
 %s2.density = 1.0 * exp(-(eco.X-2500).^2/(200)^2) + eco.X*epsilon + delta;
-s1.setDensity(uEq)
-s2.setDensity(vEq + eco.X * epsilon + delta);
+s1.setDensity(uEq);
+s2.setDensity(vEq + eco.X * epsilon + delta + epsilon1 * cos(2*pi*eco.X / L));
 
 % Prepare the matrices for the simulation
 eco.startSimulation();
@@ -68,16 +70,16 @@ hold off
 
 
 % Start a video and insert the frame with the initial condition
-video = VideoWriter('outPag5Fig1','MPEG-4');
+video = VideoWriter('Figure4','MPEG-4');
 video.Quality = 75;
 video.FrameRate = 30;
 open(video)
 writeVideo(video, getframe(gcf));
 
-while (eco.t < 200)
+while (eco.t < 800)
     
     % Evolve the system of 2 time-steps
-    for i=1:2
+    for i=1:100
         eco.crankStep();
     end
     
@@ -88,7 +90,7 @@ while (eco.t < 200)
     plot(eco.X, s2.density);
     ylim([0 1.2]);
     
-    title(sprintf('Non chaotic situation t=%.2f',eco.t));
+    title(sprintf('Non monotonic initial conditions t=%.1f',eco.t));
     
     legend('Prey', 'Predator')
     hold off

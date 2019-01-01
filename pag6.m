@@ -4,8 +4,8 @@ D = 1;
 H = 0.3;
 r = 0.4;
 k = 2.0;
-epsilon = 1e-5;
-delta = 1e-2;
+epsilon = 2e-5;
+delta = -4e-2;
 m = r * k;
 
 %Equilibrium values
@@ -14,11 +14,11 @@ vEq = (1 - uEq)*(H + uEq);
 
 
 % Create a new ecosystem with a grid 1 x nX
-eco = Ecosystem(1,10000);
+eco = Ecosystem(1,800);
 
 % Set the left-top and the right-bottom coordinate of the rectangle
 % of the simulation.
-eco.setSpace(0, 0, 5000, 1);
+eco.setSpace(1800, 0, 2200, 1);
 
 % Set the initial time and the time-step
 eco.setTime(0, 0.05);
@@ -56,45 +56,35 @@ s2.setDensity(vEq + eco.X * epsilon + delta);
 % Prepare the matrices for the simulation
 eco.startSimulation();
 
-% Plot the initial condition
-plot(eco.X, s1.density);
-hold on 
-plot(eco.X, s2.density);
-ylim([0 1.2]);
+% Densities array
+s1TimeSeries = [];
+s2TimeSeries = [];
 
-legend('Prey', 'Predator')
-hold off
-
-
-
-% Start a video and insert the frame with the initial condition
-video = VideoWriter('outPag5Fig1','MPEG-4');
+video = VideoWriter('pag6.avi');
 video.Quality = 75;
 video.FrameRate = 30;
 open(video)
-writeVideo(video, getframe(gcf));
 
-while (eco.t < 200)
+while (eco.t < 2000)
     
-    % Evolve the system of 2 time-steps
-    for i=1:2
+    % Evolve the system of 10 time-step 
+    for i = 1:10
         eco.crankStep();
+        % Save the position at every time step
+        s1TimeSeries = [s1TimeSeries,s1.density(300)];
+        s2TimeSeries = [s2TimeSeries,s2.density(300)];
     end
     
-    % Plot the density at this time step
-    plot(eco.X, s1.density);
-    hold on 
-    
-    plot(eco.X, s2.density);
+    % Densities plot
+    plot(s1TimeSeries, s2TimeSeries);
+    title(sprintf('Chaotic situation t=%.1f',eco.t));
     ylim([0 1.2]);
-    
-    title(sprintf('Non chaotic situation t=%.2f',eco.t));
-    
-    legend('Prey', 'Predator')
-    hold off
-    
-    % Insert a frame
+    xlim([0 0.9]);
     writeVideo(video, getframe(gcf));
+
 end
 
 close(video)
+
+
+

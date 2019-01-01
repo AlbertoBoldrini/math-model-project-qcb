@@ -4,8 +4,8 @@ D = 1;
 H = 0.3;
 r = 0.4;
 k = 2.0;
-epsilon = 1e-5;
-delta = 1e-2;
+epsilon = 2e-5;
+delta = -4e-2;
 m = r * k;
 
 %Equilibrium values
@@ -68,13 +68,13 @@ hold off
 
 
 % Start a video and insert the frame with the initial condition
-video = VideoWriter('outPag5Fig1','MPEG-4');
+video = VideoWriter('outPag5Fig2-3.avi','MPEG-4');
 video.Quality = 75;
 video.FrameRate = 30;
 open(video)
 writeVideo(video, getframe(gcf));
 
-while (eco.t < 200)
+while (eco.t < 2000)
     
     % Evolve the system of 2 time-steps
     for i=1:2
@@ -88,7 +88,7 @@ while (eco.t < 200)
     plot(eco.X, s2.density);
     ylim([0 1.2]);
     
-    title(sprintf('Non chaotic situation t=%.2f',eco.t));
+    title(sprintf('Chaotic situation t=%.1f',eco.t));
     
     legend('Prey', 'Predator')
     hold off
