@@ -6,7 +6,7 @@ r = 0.4;
 k = 2.0;
 A = 0.02;
 S = 100;
-x0 = 1500*2;
+x0 = 1500;
 m = r * k;
 
 %Equilibrium values
@@ -15,14 +15,14 @@ vEq = (1 - uEq)*(H + uEq);
 
 
 % Create a new ecosystem with a grid 1 x nX
-eco = Ecosystem(1,10000);
+eco = Ecosystem(1,5000);
 
 % Set the left-top and the right-bottom coordinate of the rectangle
 % of the simulation.
 eco.setSpace(0, 0, 5000, 1);
 
 % Set the initial time and the time-step
-eco.setTime(0, 0.05);
+eco.setTime(0, 0.01);
 
 % Create two species in the ecosystem with name and color
 s1 = eco.createSpecies("Prey",     [1,0,0]);
@@ -81,7 +81,7 @@ writeVideo(video, getframe(gcf));
 while (eco.t < 1600)
     
     % Evolve the system of 2 time-steps
-    for i=1:20
+    for i=1:100
         eco.crankStep();
     end
     
