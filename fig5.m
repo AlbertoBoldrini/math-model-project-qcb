@@ -54,7 +54,7 @@ s2.grow = @(eco, sp) (k * s1.density ./ (H + s1.density) .* s2.density - m * s2.
 s1.setDensity(uEq);
 densityS2 = vEq;
 perturbativeDensityS2 = zeros(eco.nY, eco.nX);
-perturbativeDensityS2(x0:x0+S) = A*sin(2*pi*(eco.X(x0:x0+S)-x0)/S);
+perturbativeDensityS2(x0+1:x0+S) = A*sin(2*pi*(eco.X(x0+1:x0+S)-x0)/S);
 s2.setDensity(densityS2 + perturbativeDensityS2);
 
 % Prepare the matrices for the simulation
