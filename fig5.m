@@ -81,7 +81,7 @@ writeVideo(video, getframe(gcf));
 while (eco.t < 1600)
     
     % Evolve the system of 2 time-steps
-    for i=1:100
+    for i=1:10
         eco.crankStep();
     end
     
