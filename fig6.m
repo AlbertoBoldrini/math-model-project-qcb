@@ -84,7 +84,7 @@ else
             eco.crankStep();
         end
         %actual position of the right chaos front
-        interfacePosition = find(abs(s1.density - uEq) > deltaU, 1, 'last');
+        interfacePosition = find(abs(s1.density - uEq) > deltaU, 1, 'last')-1500;
         if(interfacePosition==[])
             positions = [positions,0];
         else 
