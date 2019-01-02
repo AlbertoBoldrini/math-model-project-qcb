@@ -84,12 +84,17 @@ else
 
         %actual position of the right chaos front
         interfacePosition = find(abs(s1.density - uEq) > deltaU, 1, 'last') - 1500;
-        
-        positions = [positions,interfacePosition];
-        times = [times, eco.t];
+        if(interfacePosition==[])
+            positions = [positions,0]
+        else 
+            positions = [positions,interfacePosition];
+        end
+    
 
         % Plot the front position at this time step
         plot(times,positions);
+        
+        times = [times, eco.t];
 
 
         ylim([0 350]);
