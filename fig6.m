@@ -80,7 +80,7 @@ else
     while (eco.t < simulationTime)
 
         % Evolve the system of 20 time-step
-        for i = 1:40
+        for i = 1:80
             eco.crankStep();
         end
         %actual position of the right chaos front

@@ -79,8 +79,8 @@ else
     %fig6a
     while (eco.t < simulationTime)
 
-        % Evolve the system of 50 time-step
-        for i = 1:50
+        % Evolve the system of 20 time-step
+        for i = 1:
             eco.crankStep();
         end
         %actual position of the right chaos front
@@ -93,7 +93,6 @@ else
         plot(times,positions);
         hold on        
         title(sprintf('t=%.1f',eco.t));
-        
         hold off
 
         writeVideo(video, getframe(gcf));
