@@ -21,6 +21,10 @@ classdef Ecosystem < handle
         
         % List of the species
         species = cell(0);
+        
+        % 2D image of the system
+        background = 0;
+        image = 0;
     end
     
     methods
@@ -107,7 +111,7 @@ classdef Ecosystem < handle
                 % Reshape the result into a matrix form
                 s.density = reshape(u, this.nY, this.nX);
             end
-            
+
             % Increment the time of the simulation
             this.t = this.t + this.dt;
         end
@@ -140,30 +144,47 @@ classdef Ecosystem < handle
             this.t = this.t + this.dt;
         end
         
-        function initializeImage(this) 
+        function initializePlot2D(this, background) 
             
-            hold off
+            hold off                 
+            this.image = imshow(background);
             
-            for i = 1:this.nS
-                this.species{i}.initializeImage();
-                hold on
-            end
-            
-            hold off
-            
-            this.updateImage();
+            this.background = im2double(background);
         end
         
-        function updateImage(this)
+        function plot2D(this) 
             
+            r = zeros(this.nY, this.nX);
+            g = zeros(this.nY, this.nX);
+            b = zeros(this.nY, this.nX);
+            
+            weight = 1e-5 * ones(this.nY, this.nX);            
+                        
             for i = 1:this.nS
-                this.species{i}.updateImage();
+                
+                weight = weight + this.species{i}.density;                
+                
+                r = r + this.species{i}.density .* this.species{i}.color(1);
+                g = g + this.species{i}.density .* this.species{i}.color(2);
+                b = b + this.species{i}.density .* this.species{i}.color(3);
+                
             end
             
+            alpha = min(weight, 1);
+            
+            colors = cat(3, uint8(255 .* (this.background(:,:,1) + alpha .* (r ./weight - this.background(:,:,1)))), ...
+                            uint8(255 .* (this.background(:,:,2) + alpha .* (g ./weight - this.background(:,:,2)))), ...
+                            uint8(255 .* (this.background(:,:,3) + alpha .* (b ./weight - this.background(:,:,3)))));
+                        
+            set(this.image,'CData', colors);  
         end
         
-        
-
+        function extinguish(this, treshold)
+            
+            for i = 1:this.nS
+                this.species{i}.extinguish(treshold);
+            end
+        end
     end
 end
 

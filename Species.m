@@ -23,6 +23,7 @@ classdef Species < handle
         down   = 0;
         left   = 0;
         right  = 0;
+        factor = 1;
         
         name   = "Unnamed";
         color  = [0, 0, 0];
@@ -57,6 +58,7 @@ classdef Species < handle
             this.Vx      = zeros(nY, nX);
             this.Vy      = zeros(nY, nX);
             this.density = zeros(nY, nX);
+            this.factor  = ones(nY, nX);
         end
         
         function setDensity(this, density)
@@ -98,15 +100,17 @@ classdef Species < handle
             
         end
         
-        function addNoFluxObstacle(this, obstacle)
+        function addNoFluxObstacle(this, pass)
             
-            pass = 1 - obstacle;
-           
-            this.up    = this.up    .* pass(1:this.nY  , 2:this.nX+1);
-            this.down  = this.down  .* pass(3:this.nY+2, 2:this.nX+1);
-            this.left  = this.left  .* pass(2:this.nY+1, 1:this.nX  );
-            this.right = this.right .* pass(2:this.nY+1, 3:this.nX+2);
+            nX = this.ecosystem.nX;
+            nY = this.ecosystem.nY;
             
+            this.up    = this.up    .* pass(1:nY  , 2:nX+1);
+            this.down  = this.down  .* pass(3:nY+2, 2:nX+1);
+            this.left  = this.left  .* pass(2:nY+1, 1:nX  );
+            this.right = this.right .* pass(2:nY+1, 3:nX+2);
+            
+            this.factor = this.factor .* ceil(pass(2:nY+1, 2:nX+1));
         end
         
         function addNoFluxBoundariesX(this)
@@ -140,11 +144,15 @@ classdef Species < handle
             dy = this.ecosystem.dy;
 
             %% Linearize the matrices
-            u = reshape((0.5 * dt / dy) * this.up   , nX*nY, 1);
-            d = reshape((0.5 * dt / dy) * this.down , nX*nY, 1);
-            l = reshape((0.5 * dt / dx) * this.left , nX*nY, 1);
-            r = reshape((0.5 * dt / dx) * this.right, nX*nY, 1);
-            c = u + d + l + r;
+            u = reshape((0.5 * dt / dy) * this.factor .* this.up   , nX*nY, 1);
+            d = reshape((0.5 * dt / dy) * this.factor .* this.down , nX*nY, 1);
+            l = reshape((0.5 * dt / dx) * this.factor .* this.left , nX*nY, 1);
+            r = reshape((0.5 * dt / dx) * this.factor .* this.right, nX*nY, 1);
+            c = u + d + l + r + 1 * reshape((1 - this.factor), nX*nY, 1);
+            
+            if max(c) > 1 
+                warning("Time step too high! The system may be instable, suggested timestep = %g", dt / max(c));
+            end
 
             %% Detach the link between different columns in the matrix
             for x = 1:(nX-1)       
@@ -181,8 +189,7 @@ classdef Species < handle
             imageData = cat(3, this.color(1) * ones(size(this.density)), ... 
                                this.color(2) * ones(size(this.density)), ...
                                this.color(3) * ones(size(this.density)));
-            
-            %this.image = imshow(imageData, 'InitialMagnification','fit');
+           
             this.image = imshow(imageData);
             
             set(this.image, 'AlphaData', zeros(size(this.density)))
@@ -192,6 +199,12 @@ classdef Species < handle
             
             set(this.image, 'AlphaData', this.density)
         
+        end
+        
+        function extinguish(this, treshold)
+            
+            this.density = max(0, this.density - treshold);
+            
         end
     end
 end
