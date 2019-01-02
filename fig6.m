@@ -64,10 +64,16 @@ else
     s2.setDensity(densityS2 + perturbativeDensityS2);
 
     times = [];
+    positions =[];
     
     % Prepare the matrices for the simulation
     eco.startSimulation();
-    positions =[];
+
+    video = VideoWriter('fig6.avi');
+    video.Quality = 75;
+    video.FrameRate = 30;
+    open(video);
+    writeVideo(video, getframe(gcf));
 
 
     %fig6a
@@ -76,18 +82,23 @@ else
         % Evolve the system of 1 time-step
         eco.crankStep();
 
-
-
         %actual position of the right chaos front
         interfacePosition = find(abs(s1.density - uEq) > deltaU, 1, 'last') - 1500;
+        
         positions = [positions,interfacePosition];
-
         times = [times, eco.t];
-    end
-     % Plot the front position at this time step
+
+        % Plot the front position at this time step
         plot(times,positions);
+
 
         ylim([0 350]);
         xlim([0 500]);
+        writeVideo(video, getframe(gcf));
+
+
+    end
+    close(video);
+    
 
 end
