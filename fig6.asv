@@ -84,30 +84,18 @@ else
             eco.crankStep();
         end
         %actual position of the right chaos front
-        interfacePosition = find(abs(s1.density - uEq) > deltaU, 1, 'last');
-        if(interfacePosition==[])
-            positions = [positions,0]
-        else 
-            positions = [positions,interfacePosition];
-        end
-    
-
-        % Plot the front position at this time step
-        %plot(times,positions);
+        interfacePosition = find(abs(s1.density - uEq) > deltaU, 1, 'last')-1500;
         
-        times = [times, eco.t];
-
-        %title(sprintf('abs=%.1f t=%.1f ',abs(s1.density - uEq),eco.t));
-        title(sprintf('t=%.1f find=%.1f',eco.t,interfacePosition));
-        hold on
-        
-        % Plot the density at this time step
+        positions = [positions,interfacePosition];
        
-        plot(eco.X, s1.density);
+        times = [times, eco.t];
+        
+        plot(times,positions);
+        hold on        
+        title(sprintf('t=%.1f',eco.t));
+        
+        hold off
 
-        ylim([uEq-0.1 uEq+0.1]);
-        xlim([1550 1690]);
-        hold 
         writeVideo(video, getframe(gcf));
 
 

@@ -79,36 +79,20 @@ else
     %fig6a
     while (eco.t < simulationTime)
 
-        % Evolve the system of 50 time-step
-        for i = 1:50
+        % Evolve the system of 20 time-step
+        for i = 1:40
             eco.crankStep();
         end
         %actual position of the right chaos front
         interfacePosition = find(abs(s1.density - uEq) > deltaU, 1, 'last')-1500;
-        if(interfacePosition==[])
-            positions = [positions,0];
-        else 
-            positions = [positions,interfacePosition];
-        end
-    
-
-        % Plot the front position at this time step
-        %plot(times,positions);
         
+        positions = [positions,interfacePosition];
+       
         times = [times, eco.t];
-
-        %title(sprintf('abs=%.1f t=%.1f ',abs(s1.density - uEq),eco.t));
         
-       
-       
-        %plot(eco.X, s1.density);
-        
-        hold on
-        
-        title(sprintf('t=%.1f find=%.1f',eco.t,interfacePosition));
         plot(times,positions);
-        % ylim([uEq-0.1 uEq+0.1]);
-        %xlim([1550 1690]);
+        hold on        
+        title(sprintf('t=%.1f',eco.t));
         hold off
 
         writeVideo(video, getframe(gcf));
