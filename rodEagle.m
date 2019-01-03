@@ -1,3 +1,17 @@
+%unità di misura
+%time = years
+%space = km
+
+km=1;
+m=1e-3; %meters
+h=1/(365*24);
+
+
+%Birds Parameters
+
+%Rodents Parameters
+D=0.5 * 15*km/h * 5*m
+%Insects Parameters
 
 
 % The parameters of the paper
