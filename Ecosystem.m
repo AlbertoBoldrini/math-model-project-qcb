@@ -95,8 +95,6 @@ classdef Ecosystem < handle
                 grow{i} = this.species{i}.grow(this, this.species{i});
             end
             
-            tic
-            
             % Evolve each species
             for i = 1:this.nS
                 
@@ -114,8 +112,6 @@ classdef Ecosystem < handle
                 s.density = reshape(u, this.nY, this.nX);
             end
             
-            toc
-
             % Increment the time of the simulation
             this.t = this.t + this.dt;
         end
@@ -129,8 +125,7 @@ classdef Ecosystem < handle
                 grow{i} = this.species{i}.grow(this, this.species{i});
             end
             
-            tic
-            
+        
             % Evolve each species
             for i = 1:this.nS
                 
@@ -152,11 +147,10 @@ classdef Ecosystem < handle
                 % Reshape the result into a matrix form
                 s.density = reshape(u, this.nY, this.nX);
             end
-            
-            toc
+
 
             % Increment the time of the simulation
-            this.t = this.t + this.dt;
+            this.t = this.t + this.dt * nDiffusions;
         end
         
         function crankStep(this)
