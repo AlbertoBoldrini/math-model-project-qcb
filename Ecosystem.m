@@ -95,6 +95,8 @@ classdef Ecosystem < handle
                 grow{i} = this.species{i}.grow(this, this.species{i});
             end
             
+            tic
+            
             % Evolve each species
             for i = 1:this.nS
                 
@@ -106,11 +108,52 @@ classdef Ecosystem < handle
                 g = reshape(  grow{i}, this.nY * this.nX, 1);
                 
                 % Compute the density at the next step
-                u = s.B * (s.B * u + g * this.dt);
+                u = s.B * (s.B * (u + g * this.dt));
                 
                 % Reshape the result into a matrix form
                 s.density = reshape(u, this.nY, this.nX);
             end
+            
+            toc
+
+            % Increment the time of the simulation
+            this.t = this.t + this.dt;
+        end
+        
+        function multiEulerStep(this, nDiffusions)
+            
+            grow = cell(this.nS, 1);
+            
+            % Compute the grow rate for each species
+            for i = 1:this.nS
+                grow{i} = this.species{i}.grow(this, this.species{i});
+            end
+            
+            tic
+            
+            % Evolve each species
+            for i = 1:this.nS
+                
+                % Fetch the current species
+                s = this.species{i};
+                
+                % Reshape the density and the grow rate
+                u = reshape(s.density, this.nY * this.nX, 1);
+                g = reshape(  grow{i}, this.nY * this.nX, 1);
+                
+                % Grow the species
+                u = u + g * this.dt * nDiffusions;
+                
+                % Compute the density at the next step
+                for j = 1:nDiffusions
+                    u = s.B * (s.B * u);
+                end
+                    
+                % Reshape the result into a matrix form
+                s.density = reshape(u, this.nY, this.nX);
+            end
+            
+            toc
 
             % Increment the time of the simulation
             this.t = this.t + this.dt;

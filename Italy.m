@@ -7,6 +7,8 @@ m = 0.4;
 k = 2.0;
 eps = 0.03;
 
+ratio = 1;
+
 
 Tomo   = imread('img/Italy_Tomo.png');
 Height = im2double(imread('img/Italy_Height.png'));
@@ -14,6 +16,15 @@ Area   = im2double(imread('img/Italy_Area.png'));
 
 % Get the size from the image
 [nY, nX] = size(Height);
+
+if ratio < 1
+   nY = double(int32(nY * ratio));
+   nX = double(int32(nX * ratio));
+   
+   Tomo   = imresize(Tomo,   [nY nX]);
+   Height = imresize(Height, [nY nX]);
+   Area   = imresize(Area,   [nY+2 nX+2]);
+end
 
 % Create a new ecosystem with a grid nY x nX
 eco = Ecosystem(nY,nX);
@@ -72,17 +83,16 @@ writeVideo(video, getframe(gcf));
 
 for i = 1:1000
     
-    tic
+
     for j = 1:30
     
         % Evolve the system of 1 time-step
         eco.eulerStep();
     end
-    toc
     
     eco.extinguish(1e-5);
     
-    title(sprintf("t = %d", i));
+    title(sprintf("t = %d", eco.t));
     
     % Update the image with the new 
     eco.plot2D();
