@@ -124,8 +124,7 @@ classdef Ecosystem < handle
             for i = 1:this.nS
                 grow{i} = this.species{i}.grow(this, this.species{i});
             end
-            
-        
+
             % Evolve each species
             for i = 1:this.nS
                 
@@ -147,7 +146,6 @@ classdef Ecosystem < handle
                 % Reshape the result into a matrix form
                 s.density = reshape(u, this.nY, this.nX);
             end
-
 
             % Increment the time of the simulation
             this.t = this.t + this.dt * nDiffusions;
@@ -186,20 +184,21 @@ classdef Ecosystem < handle
             hold off                 
             this.image = imshow(background);
             
-            this.background = im2double(background);
+            this.background = (im2double(background));
         end
         
         function plot2D(this) 
+            
             
             r = zeros(this.nY, this.nX);
             g = zeros(this.nY, this.nX);
             b = zeros(this.nY, this.nX);
             
-            weight = 1e-5 * ones(this.nY, this.nX);            
+            weight = 1e-5 * ones(this.nY, this.nX);           
                         
             for i = 1:this.nS
                 
-                weight = weight + this.species{i}.density;                
+                weight = weight + this.species{i}.density / this.species{i}.scale;                
                 
                 r = r + this.species{i}.density .* this.species{i}.color(1);
                 g = g + this.species{i}.density .* this.species{i}.color(2);
@@ -207,13 +206,14 @@ classdef Ecosystem < handle
                 
             end
             
+            
             alpha = min(weight, 1);
             
             colors = cat(3, uint8(255 .* (this.background(:,:,1) + alpha .* (r ./weight - this.background(:,:,1)))), ...
                             uint8(255 .* (this.background(:,:,2) + alpha .* (g ./weight - this.background(:,:,2)))), ...
                             uint8(255 .* (this.background(:,:,3) + alpha .* (b ./weight - this.background(:,:,3)))));
-                        
-            set(this.image,'CData', colors);  
+            
+            set(this.image,'CData', gather(colors)); 
         end
         
         function extinguish(this, treshold)

@@ -38,6 +38,7 @@ classdef Species < handle
         B = 0;
         
         density = 0;
+        scale = 1;
         
         grow = @(ecosystem, species) (0 * species.density)
     end

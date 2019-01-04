@@ -1,32 +1,8 @@
-%unità di misura
-%time = years
-%space = km
+gpuDevice(1);
 
-km=1;
-m=1e-3; %meters
-h=1/(365*24);
-
-
-%Birds Parameters
-
-%Rodents Parameters
-D=0.5 * 15*km/h * 5*m
-%Insects Parameters
-
-
-% The parameters of the paper
-D = 150;
-H = 0.3;
-m = 0.4;
-k = 2.0;
-eps = 0.03;
-
-ratio = 0.5;
-
-
-Tomo   =           imread('img2/Italy_Tomo.png');
-Height = im2double(imread('img2/Italy_Height.png'));
-Area   = im2double(imread('img2/Italy_Area.png'));
+Tomo   = gpuArray(          imread('img2/Italy_Tomo.png'));
+Height = gpuArray(im2double(imread('img2/Italy_Height.png')));
+Area   = gpuArray(im2double(imread('img2/Italy_Area.png')));
 
 % Get the size from the image
 [nY, nX] = size(Height);
@@ -39,6 +15,31 @@ if ratio < 1
    Height = imresize(Height, [nY nX]);
    Area   = imresize(Area,   [nY+2 nX+2]);
 end
+
+% Species 1
+s1_diff  = 100; 
+s1_grow  = 1 - 2 * Height;
+s1_carry = 1 * s1_grow;
+
+% Species 2
+s2_diff  = 150;
+s2_mort  = 0.5 + 1 * Height;
+
+% Species 3
+s3_diff  = 150;
+s3_mort  = 0.5 + 1 * Height;
+
+% Interaction 1-2
+s12_rate = 1;
+s12_hsat = 1;
+s12_grow = 2;
+
+% Interaction 2-3
+s23_rate = 1;
+s23_hsat = 1;
+s23_grow = 2;
+
+
 
 % Create a new ecosystem with a grid nY x nX
 eco = Ecosystem(nY,nX);
@@ -53,34 +54,36 @@ eco.setSpace(0, 0, nX / nY * kmHeight, kmHeight);
 eco.setTime(0, 0.0075);
 
 % Create two species in the ecosystem with name and color
-s1 = eco.createSpecies("Prey",     [1,0,0]);
-s2 = eco.createSpecies("Predator", [0,0,1]);
+s1 = eco.createSpecies("S1", [1,0,0]);
+s2 = eco.createSpecies("S2", [0,0,1]);
+s3 = eco.createSpecies("S3", [1,1,0]);
 
 % Set the diffusion parameter and the boundaries for this species
-s1.setDiffusion(D);
-s2.setDiffusion(D);
+s1.setDiffusion(s1_diff);
+s2.setDiffusion(s2_diff);
+s3.setDiffusion(s3_diff);
 
 % After the setting of the diffusion coefficent
 % The fluxes must be initialized and then patched with
 % other methods like addNoFluxBoundaries
 s1.initializeFluxes();
 s2.initializeFluxes();
+s3.initializeFluxes();
 
 % The species can not exit from the simulation area
-s1.addNoFluxBoundaries();
-s2.addNoFluxBoundaries();
-
 s1.addNoFluxObstacle(Area);
 s2.addNoFluxObstacle(Area);
+s3.addNoFluxObstacle(Area);
 
 % The initial condition
 s1.density = 1.5 * max((exp(-((eco.X-700).^2 + (eco.Y-700).^2)/(40)^2) - eps), 0);
-s2.density = 1.5 * max((exp(-((eco.X-600).^2 + (eco.Y-600).^2)/(40)^2) - eps), 0);
+s2.density = 1.5 * max((exp(-((eco.X-675).^2 + (eco.Y-675).^2)/(40)^2) - eps), 0);
+s3.density = 1.5 * max((exp(-((eco.X-650).^2 + (eco.Y-650).^2)/(40)^2) - eps), 0);
 
 % Grow functions
-s1.grow = @(eco, sp) (s1.density .* (1 - s1.density)) - s1.density ./ (H + s1.density) .* s2.density - 3 * s1.density .* Height;
-s2.grow = @(eco, sp) (k * s1.density ./ (H + s1.density) .* s2.density - m * s2.density - 3 * s2.density .* Height);
-
+s1.grow = @(eco, sp) s1.density .* (s1_grow  .* (1 - s1.density ./ s1_carry) - s12_rate ./ (s1.density + s12_hsat) .* s2.density);
+s2.grow = @(eco, sp) s2.density .* (s12_rate .* s12_grow .* s1.density ./ (H + s1.density) - s2_mort - s23_rate ./ (s2.density + s23_hsat) .* s3.density);
+s3.grow = @(eco, sp) s3.density .* (s23_rate .* s23_grow .* s2.density ./ (H + s2.density) - s3_mort);
 
 % Prepare the matrices for the simulation
 eco.startSimulation();
@@ -95,10 +98,10 @@ video.FrameRate = 30;
 open(video)
 writeVideo(video, getframe(gcf));
 
-for i = 1:1000
+while eco.t < 3
     
 
-    for j = 1:30
+    for j = 1:1
     
         % Evolve the system of 1 time-step
         eco.multiEulerStep(5);

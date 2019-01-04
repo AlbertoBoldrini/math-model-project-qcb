@@ -1,16 +1,16 @@
 gpuDevice(1);
 
 % The parameters of the paper
-D = 150;
+D = 5;
 H = 0.3;
 m = 0.4;
 k = 2.0;
 eps = 0.03;
 
-ratio = 1.0;
+ratio = 1;
 
 
-Tomo   = gpuArray(          imread('img/Italy_Tomo.png'));
+Tomo   = gpuArray(imread('img/Italy_Tomo.png'));
 Height = gpuArray(im2double(imread('img/Italy_Height.png')));
 Area   = gpuArray(im2double(imread('img/Italy_Area.png')));
 
@@ -43,8 +43,8 @@ s1 = eco.createSpecies("Prey",     [1,0,0]);
 s2 = eco.createSpecies("Predator", [0,0,1]);
 
 % Set the diffusion parameter and the boundaries for this species
-s1.setDiffusion(D);
-s2.setDiffusion(D);
+s1.setDiffusion(D * exp(Height / 0.3));
+s2.setDiffusion(D * exp(Height / 0.3));
 
 % After the setting of the diffusion coefficent
 % The fluxes must be initialized and then patched with
@@ -64,8 +64,8 @@ s1.density = 1.5 * max((exp(-((eco.X-700).^2 + (eco.Y-700).^2)/(40)^2) - eps), 0
 s2.density = 1.5 * max((exp(-((eco.X-600).^2 + (eco.Y-600).^2)/(40)^2) - eps), 0);
 
 % Grow functions
-s1.grow = @(eco, sp) (s1.density .* (1 - s1.density)) - s1.density ./ (H + s1.density) .* s2.density - 3 * s1.density .* Height;
-s2.grow = @(eco, sp) (k * s1.density ./ (H + s1.density) .* s2.density - m * s2.density - 3 * s2.density .* Height);
+s1.grow = @(eco, sp) (s1.density .* (1 - s1.density)) - s1.density ./ (H + s1.density) .* s2.density; % - 3 * s1.density .* Height;
+s2.grow = @(eco, sp) (k * s1.density ./ (H + s1.density) .* s2.density - m * s2.density); % - 3 * s2.density .* Height;
 
 
 % Prepare the matrices for the simulation
@@ -81,13 +81,13 @@ video.FrameRate = 30;
 open(video)
 writeVideo(video, getframe(gcf));
 
-for i = 1:1000
+while eco.t < 200
     
     tic
-    for j = 1:80
+    for j = 1:2
     
         % Evolve the system of 1 time-step
-        eco.multiEulerStep(5);
+        eco.multiEulerStep(10);
     end
     
     
