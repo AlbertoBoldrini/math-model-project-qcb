@@ -72,7 +72,7 @@ hold off
 
 
 % Start a video and insert the frame with the initial condition
-video = VideoWriter('outFig5','MPEG-4');
+video = VideoWriter('fig5','MPEG-4');
 video.Quality = 75;
 video.FrameRate = 30;
 open(video)

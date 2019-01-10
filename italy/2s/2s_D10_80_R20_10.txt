@@ -1,0 +1,12 @@
+%% Definition of the parameters
+
+% Prey
+s1_diff  = 10; 
+s1_grow  = 20;
+s1_mort  = 60 * Height;
+
+% Predator
+s2_diff  = 80; 
+s2_rate  = 10;
+s2_hsat  = 0.3;
+s2_mort  = 0.1 + 60 * Height;

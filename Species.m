@@ -212,6 +212,60 @@ classdef Species < handle
             this.density = max(0, this.density - treshold);
             
         end
+        
+        function boxPlotFeature(this, feature, filter)
+            
+            nX = this.ecosystem.nX;
+            nY = this.ecosystem.nY;
+            
+     
+            u = reshape(gather(this.density), nX*nY, 1);
+            f = reshape(gather(feature),      nX*nY, 1);
+            g = reshape(gather(filter),       nX*nY, 1);
+            
+            u = u(g);
+            f = f(g);
+           
+%             s = scatter(f,u, 7, '.');
+%             s.MarkerEdgeColor = this.color;
+%             hold on
+            
+            maxn = max(f);
+            minn = min(f);
+            
+            num = 128;
+            
+            mult = num / (maxn - minn);
+  
+            len = zeros(num,1);
+            sum = zeros(num,1);
+            sqr = zeros(num,1);
+            
+            for i = 1:length(u)
+                
+                if f(i) < maxn
+                    idx = floor(mult .* (f(i) - minn)) + 1;
+                else
+                    idx = num;
+                end
+                
+                len(idx) = len(idx) + 1;
+                sum(idx) = sum(idx) + u(i);
+                sqr(idx) = sqr(idx) + u(i) * u(i);
+            end
+            
+            fea = linspace(minn, maxn, num);
+            avg = sum ./ len;
+            dev = sqrt((length(u) .* sqr - sum .* sum) / (length(u) * (length(u) - 1)));
+            
+            p1 = plot(fea,avg + dev, 'color', this.color);
+            hold on
+            plot(fea,avg, 'color', this.color, 'LineWidth', 3);
+            p2 = plot(fea,avg - dev, 'color', this.color);
+            
+            p1.Color(4) = 0.4;
+            p2.Color(4) = 0.4;
+        end
     end
 end
 
